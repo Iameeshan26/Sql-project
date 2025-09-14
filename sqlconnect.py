@@ -1,5 +1,5 @@
 import mysql.connector
-mydb = mysql.connector.connect(host="localhost", user="root", password="eeshu2604")
+mydb = mysql.connector.connect(host="localhost", user="root", password="")
 mycursor = mydb.cursor()
 def createdatabase(dbname):
     mycursor.execute(f"CREATE DATABASE {dbname}")
