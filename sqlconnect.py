@@ -1,5 +1,5 @@
 import mysql.connector
-mydb = mysql.connector.connect(host="localhost", user="root", password="")
+mydb = mysql.connector.connect(host="localhost", user="root", password="eeshu2604")
 mycursor = mydb.cursor()
 def createdatabase(dbname):
     mycursor.execute(f"CREATE DATABASE {dbname}")
@@ -17,7 +17,22 @@ def createtable(tablename, columns):
     mycursor.execute(f"CREATE TABLE {tablename} ({columns})")
     mydb.commit()
 def insertdata(tablename, values):
-    mycursor.execute(f"INSERT INTO {tablename} VALUES ({values})")
+    """Insert a row into `tablename` using parameterized query.
+
+    `values` may be a comma-separated string (from the Streamlit input)
+    or a list/tuple of values. Strings will be passed as-is to the
+    parameterized query so quoting is handled by the connector.
+    """
+    if isinstance(values, str):
+        vals = [v.strip() for v in values.split(',')]
+    elif isinstance(values, (list, tuple)):
+        vals = list(values)
+    else:
+        raise TypeError("values must be a string, list, or tuple")
+
+    placeholders = ','.join(['%s'] * len(vals))
+    sql = f"INSERT INTO {tablename} VALUES ({placeholders})"
+    mycursor.execute(sql, tuple(vals))
     mydb.commit()
 def droptable(tablename):
     mycursor.execute(f"DROP TABLE {tablename}")
@@ -37,5 +52,9 @@ def jointables(table1, table2, join_condition):
     return result
 def customquery(query):
     mycursor.execute(query)
-    result = mycursor.fetchall()
-    return result
+    # If it's a SELECT, return results; otherwise commit and return None
+    if query.strip().upper().startswith('SELECT'):
+        return mycursor.fetchall()
+    else:
+        mydb.commit()
+        return None
